@@ -8,6 +8,7 @@ class User_model(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
+    username = Column(String)
     email = Column(String, unique=True, index=True)
     hashed_password = Column(String)
     is_active = Column(Boolean, default=True)
@@ -16,18 +17,6 @@ class User_model(Base):
     
     created_on = Column(DateTime,nullable=False)
     updated_on = Column(DateTime,nullable=False)
-
-class refresh_token(Base):
-    __tablename__  = "refreshTokens"
-    
-    user_id = Column(Integer,primary_key=True, index=True)
-    token  = Column(String, unique=True)
-    
-class access_token(Base):
-    __tablename__ = "accessTokens"
-    
-    user_id = Column(Integer, primary_key=True, index =True)
-    token  = Column(String, unique=True)
     
 class Blog(Base):
     __tablename__ = "Blogs"
@@ -40,3 +29,15 @@ class Blog(Base):
     
     created_on = Column(DateTime,nullable=False)
     updated_on = Column(DateTime,nullable=False)
+    
+class refresh_token(Base):
+    __tablename__  = "refreshTokens"
+    
+    user_id = Column(Integer,primary_key=True, index=True)
+    token  = Column(String, unique=True)
+    
+class access_token(Base):
+    __tablename__ = "accessTokens"
+    
+    user_id = Column(Integer, primary_key=True, index =True)
+    token  = Column(String, unique=True)

@@ -16,7 +16,7 @@ def get_users(db: Session, skip: int = 0, limit: int = 100):
 
 def create_user(db: Session, user: blogapi_schemas.user_create_class):
     hashed_password = blogapi_utilities.generate_password_hash
-    db_user = models.User(username=user.username,email=user.email, hashed_password=hashed_password)
+    db_user = models.User_model(username=user.username,email=user.email, hashed_password=hashed_password)
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
