@@ -5,7 +5,7 @@ from sqlalchemy.orm import sessionmaker
 
 POSTGRES_PASSWORD = os.environ['POSTGRESQL_PASSWORD']
 
-SQLALCHEMY_DATABASE_URL = "postgresql://postgres:Wasarihuhunna33@localhost/postgres"
+SQLALCHEMY_DATABASE_URL = "postgresql://postgres:{}@localhost/postgres".format(POSTGRES_PASSWORD)
 
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL

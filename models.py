@@ -15,8 +15,8 @@ class User_model(Base):
     is_staff = Column(Boolean,default=False)
     user_blogs = relationship("Blog", back_populates="blog_author")
     
-    created_on = Column(DateTime,nullable=False)
-    updated_on = Column(DateTime,nullable=False)
+    created_on = Column(DateTime,nullable=True)
+    updated_on = Column(DateTime,nullable=True)
     
 class Blog(Base):
     __tablename__ = "Blogs"
