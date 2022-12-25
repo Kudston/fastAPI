@@ -27,7 +27,7 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = 
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Incorrect email or password"
+            detail="Incorrect email or password "
         )
 
     hashed_pass = user.hashed_password
@@ -61,7 +61,7 @@ def read_user(user_id: int, db: Session = Depends(database.get_db)):
 @app.post("/blog-create/",summary="send refresh_token with form", response_model=None, status_code=status.HTTP_201_CREATED)#blogapi_schemas.Blog_Schema)
 def create_blogs_for_user(blog:blogapi_schemas.Blog_Schema, refresh_token:str, db: Session = Depends(database.get_db)):
     user_id = blogapi_utilities.decodeRefreshToken(refresh_token)
-    if id is None:
+    if user_id == None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail=f'token not valid')
     user_id = user_id.get('id')
     return blog_CRUD.create_users_blog(db=db, blog=blog, user_id=user_id)

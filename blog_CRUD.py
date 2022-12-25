@@ -5,13 +5,14 @@ from datetime import datetime
 from uuid import uuid4
 
 def generate_newId(object):
-    id  = len(object)
+    id  = 0
     while True:
         try:
-            obj = object[0][id]
-            obj += 1
+            obj = object[id][id]
+            id +=1
         except:
             break
+        
     
 def get_user(db: Session, user_id: int):
     return db.query(models.User_model).filter(models.User_model.id == user_id).first()
@@ -59,8 +60,9 @@ def update_blog(db:Session, update_info:blogapi_schemas.Blog_Schema, user_id:int
     user_blog = user_blog_query.first()
     if user_blog is None:
         return Response(status_code=status.HTTP_404_NOT_FOUND)
-    
-    update = user_blog_query.update(update_info.dict(), synchronize_session=False)
+    update_info = update_info.dict()
+    update_info['updated_on'] = datetime.utcnow()
+    update = user_blog_query.update(update_info, synchronize_session=False)
     db.commit()
     return (user_blog_query.first())
 
