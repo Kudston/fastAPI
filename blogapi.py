@@ -1,6 +1,6 @@
 from typing import List
-
-from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi.security import OAuth2PasswordRequestForm
+from fastapi import Depends, FastAPI, HTTPException, status, Request
 from sqlalchemy.orm import Session
 
 from blogAPI import blog_CRUD, models, blogapi_schemas,database,blogapi_utilities
@@ -21,20 +21,26 @@ def SignUp(user: blogapi_schemas.user_create_class, db: Session = Depends(databa
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
     return blog_CRUD.create_user(db=db, user=user)
 
-@app.post("/sign-in/",response_class=None)
-def SignIn(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(database.get_db)):
-    db_user = blog_CRUD.get_user_by_email(db,form_data.email)
-    #check if user exist
-    if db_user is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail= f'Invalid credentials provided')
-    hashed_pass = User_model.hashed_password
-    #check password
-    if not blogapi_utilities.validate_password(user_credentials.password):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail="Invalid credentials provided")
-    #return refresh token
-    refresh_token = blogapi_utilities.refreshTokenGenerator(db_user.id)
-    return refresh_token
+@app.post('/login', summary="enter email as username", response_model=None)
+async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(database.get_db)):
+    user = blog_CRUD.get_user_by_email(db=db, user_email=form_data.username)
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Incorrect email or password"
+        )
+
+    hashed_pass = user.hashed_password
+    if not blogapi_utilities.validate_password(form_data.password,hashed_pass):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Incorrect email or password"
+        )
         
+    return {
+        "access_token": blogapi_utilities.accessTokenGenerator(user.id),
+        "refresh_token":blogapi_utilities.refreshTokenGenerator(user.id) 
+    }   
 
 @app.get("/users/", response_model=None)
 def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(database.get_db)):
@@ -44,7 +50,7 @@ def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(database.g
     return users
 
 
-@app.get("/user/{user_id}/", response_model=None)
+@app.get("/user/{user_id}/", response_model=None,status_code=status.HTTP_200_OK)
 def read_user(user_id: int, db: Session = Depends(database.get_db)):
     db_user = blog_CRUD.get_user(db, user_id=user_id)
     if db_user is None:
@@ -52,27 +58,51 @@ def read_user(user_id: int, db: Session = Depends(database.get_db)):
     return db_user
 
 
-@app.post("/users/{user_id}/blog-create/", response_model=None)#blogapi_schemas.Blog_Schema)
-def create_blogs_for_user(user_id: int, blog: blogapi_schemas.Blog_Schema, db: Session = Depends(database.get_db)):
+@app.post("/blog-create/",summary="send refresh_token with form", response_model=None, status_code=status.HTTP_201_CREATED)#blogapi_schemas.Blog_Schema)
+def create_blogs_for_user(blog:blogapi_schemas.Blog_Schema, refresh_token:str, db: Session = Depends(database.get_db)):
+    user_id = blogapi_utilities.decodeRefreshToken(refresh_token)
+    if id is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail=f'token not valid')
+    user_id = user_id.get('id')
     return blog_CRUD.create_users_blog(db=db, blog=blog, user_id=user_id)
 
+@app.get("/user_blogs/", response_model=None, status_code=status.HTTP_200_OK)
+def get_user_blog(refresh_token:str, db: Session = Depends(database.get_db)):
+    id = blogapi_utilities.decodeRefreshToken(refresh_token)
+    if id is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'token not valid')
+    blogs = blog_CRUD.get_user_blogs(db=db,user_id=id.get('id'))
+    return blogs
 
-@app.get("/blogs/", response_model=None)#List[blogapi_schemas.Blog_Schema])
-def read_items(skip: int = 0, limit: int = 100, db: Session = Depends(database.get_db)):
+
+@app.get("/blogs/", response_model=None, status_code=status.HTTP_200_OK)#List[blogapi_schemas.Blog_Schema])
+def get_blogs(skip: int = 0, limit: int = 100, db: Session = Depends(database.get_db)):
     blogs = blog_CRUD.get_Blogs(db, skip=skip, limit=limit)
     return blogs
 
-# @app.put("/blogs/{blog_id}/update", response_model=None)#blogapi_schemas.Blog_Schema)
-# def update_blog(update_info:blogapi_schemas.Blog_Schema, user_id:int, blog_id:int, db:Session = Depends(database.get_db)):
-#     blog = blog_CRUD.update_blog(update_info=update_info, user_id=user_id, blog_id=blog_id, db=db)
-#     if blog is None:
-#         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'blog not found')
-#     return blog
+@app.put("/blogs/{blog_id}/update", response_model=None)
+def update_blog(update_info:blogapi_schemas.Blog_Schema, blog_id:int, refresh_token:str, db:Session = Depends(database.get_db)):
+    id = blogapi_utilities.decodeRefreshToken(refresh_token)
+    if id is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail=f'token not valid')
+    c_blog = db.query(models.Blog).filter(models.Blog.author_id==id.get('id'), models.Blog.id==blog_id).first()
+    
+    if c_blog is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'blog with id does not exist')
+    
+    return blog_CRUD.update_blog(update_info=update_info, user_id=id.get('id'), blog_id=blog_id, db=db)
+    
 
-# @app.delete("/blogs/{id}/", response_model=None)
-# def delete_blog(user_id:int, blog_id:int, db: Session= Depends (database.get_db)):
-#     blog = blog_CRUD.delete_blog(db=db,user_id=user_id, blog_id=blog_id)
-#     if blog is None:
-#         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'Blog with {blog_id} id does not exist')
-#     return "successfully deleted blog"
+@app.delete("/blogs/{id}/", response_model=None)
+def delete_blog(refresh_token:str, blog_id:int, db: Session= Depends (database.get_db)):
+    id = blogapi_utilities.decodeRefreshToken(refresh_token)
+    if id is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,detail=f'token not valid')
+    
+    c_blog = db.query(models.Blog).filter(models.Blog.author_id==id.get('id'), models.Blog.id==blog_id).first()
+    if c_blog is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f'blog with id does not exist')
+        
+    blog = blog_CRUD.delete_blog(db=db,user_id=id.get('id'), blog_id=blog_id)
+    return blog
 

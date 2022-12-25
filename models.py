@@ -30,14 +30,3 @@ class Blog(Base):
     created_on = Column(DateTime,nullable=False)
     updated_on = Column(DateTime,nullable=False)
     
-class refresh_token(Base):
-    __tablename__  = "refreshTokens"
-    
-    user_id = Column(Integer,primary_key=True, index=True)
-    token  = Column(String, unique=True)
-    
-class access_token(Base):
-    __tablename__ = "accessTokens"
-    
-    user_id = Column(Integer, primary_key=True, index =True)
-    token  = Column(String, unique=True)
