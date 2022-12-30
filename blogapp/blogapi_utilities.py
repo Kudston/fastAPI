@@ -2,9 +2,14 @@ import os
 import datetime 
 from passlib.context import CryptContext
 from jose import jwt
+from dotenv import dotenv_values
+from .config import settings
 
-PASSWORD_HASHER_PASS = os.environ["HASHING_PASSWORD"]
+configuration_file = dotenv_values('.env')
+PASSWORD_HASHER_PASS = 'this_isMypasswordHasher'
 ALGORITHM   = "HS256"
+
+print(settings.DATABASE_ALGORITHM)
 
 
 password_hasher = CryptContext(schemes=["bcrypt"], deprecated="auto")

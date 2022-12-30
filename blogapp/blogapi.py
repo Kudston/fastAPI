@@ -3,12 +3,12 @@ from fastapi.security import OAuth2PasswordRequestForm
 from fastapi import Depends, FastAPI, HTTPException, status, Request
 from sqlalchemy.orm import Session
 
-from blogAPI import blog_CRUD, models, blogapi_schemas,database,blogapi_utilities
-
 from .database import SessionLocal, engine
 
+from . import blog_CRUD, models, blogapi_schemas,database,blogapi_utilities
 
-app = FastAPI(version='15.0.3')
+
+app = FastAPI()
 
 
 models.Base.metadata.create_all(bind=engine)
