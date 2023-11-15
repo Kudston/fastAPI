@@ -32,6 +32,7 @@ jobs:
 
       - name: Save pm2 config
         run: pm2 save
-      
+  follow_logs:
+    steps:
       - name: Show logs
         run: pm2 logs
