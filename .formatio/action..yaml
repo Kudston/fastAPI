@@ -1,0 +1,29 @@
+name: FastAPI App Deployment
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    steps:
+      - name: Install nodejs
+        run: sudo apk add --update nodejs npm
+
+      - name: Install pm2
+        run: sudo npm install pm2@latest -g
+
+      - name: Install python3 and pip3
+        run: sudo apk add python3 py3-pip
+
+      - name: Install depenendencies
+        run: pip3 install -r requirements.txt
+
+  deploy:
+    steps:
+      - name: Start App with pm2
+        run: pm2 delete "fastapi-app" || true && pm2 start "uvicorn blogapp.blogapi:app --reload --port 8000" --name "fastapi-app"
+
+      - name: Save pm2 config
+        run: pm2 save
