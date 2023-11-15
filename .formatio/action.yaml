@@ -8,18 +8,23 @@ on:
 jobs:
   build:
     steps:
-      - name: Install nodejs
-        run: sudo apk add --update nodejs npm
+      - name: Update ubuntu repos with curl installation
+        run: sudo apt update -y && sudo apt install -y curl
+
+      - name: Install python3 and pip3
+        run: sudo apt install -y python3-full
+
+      - name: Install NodeJS
+        run: cd ~ && curl -sL https://deb.nodesource.com/setup_18.x -o /tmp/nodesource_setup.sh && sudo bash /tmp/nodesource_setup.sh && sudo apt install -y nodejs
 
       - name: Install pm2
         run: sudo npm install pm2@latest -g
 
-      - name: Install python3 and pip3
-        run: sudo apk add python3 py3-pip
+      - name: create virtual environment
+        run: python3 -m venv venv
 
-      - name: Install depenendencies
-        run: pip3 install -r requirements.txt
-
+      - name: Install depenendencies in virtual env
+        run: ~/code/venv/bin/pip3 install -r requirements.txt
   deploy:
     steps:
       - name: Start App with pm2
