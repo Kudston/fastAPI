@@ -75,3 +75,5 @@ def delete_blog(db:Session, user_id:int, blog_id:int):
     if deleted>0:
         return Response(status_code=status.HTTP_200_OK)
     return Response(status_code=status.HTTP_400_BAD_REQUEST) 
+
+#hhhk
